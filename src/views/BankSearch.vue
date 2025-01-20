@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, watch} from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -97,7 +97,6 @@ const filteredbranchOptions = computed(() => {
   })
 })
 
-
 const handleBankSelection = async (bank) => {
   selectedBank.value = bank
   searchBankValue.value = ''
@@ -136,12 +135,11 @@ const handleBranchSelection = (branch) => {
   const detailBranch = filteredbranchOptions.value[selectedBranchIndex.value]
   const branchCode = detailBranch.code
   const branchName = detailBranch.title
-  
+
   router.push({
-    path: `/${bankCode}/${branchCode}/${bankName}-${branchName}.html`
+    path: `/${bankCode}/${branchCode}/${bankName}-${branchName}.html`,
   })
 }
-
 
 const handleBankChoose = (e) => {
   if (e.key == 'Enter' && e.isComposing) return
@@ -188,7 +186,6 @@ watch(searchBankValue, (nv, ov) => {
   }
 })
 
-
 watch(searchBranchValue, (nv, ov) => {
   if (ov.length == 0 && nv.length > 0) {
     selectedBranchIndex.value = 0
@@ -220,31 +217,31 @@ const bankRefs = ref([])
 
 const copyCodeBtn = ref(null)
 const copyCode = async (code) => {
-  try{
+  try {
     await navigator.clipboard.writeText(code)
     copyCodeBtn.value.innerHTML = '已複製'
     setTimeout(() => {
       copyCodeBtn.value.innerHTML = '複製代碼'
-    },500)
-  }catch{
+    }, 500)
+  } catch {
     alert('複製文字失敗')
   }
 }
 
 const copyLinkBtn = ref(null)
 const copyLink = async () => {
-  try{
-    const currentUrl = window.location.href
-    await navigator.clipboard.writeText(currentUrl)
+  try {
+    const currentUrl = window.location.origin
+    const fullPath = `${currentUrl}${route.fullPath}`
+    await navigator.clipboard.writeText(fullPath)
     copyLinkBtn.value.innerHTML = '已複製'
     setTimeout(() => {
       copyLinkBtn.value.innerHTML = '複製此頁面連結'
     }, 500)
-  }catch{
+  } catch {
     alert('複製頁面連結失敗')
   }
 }
-
 
 const goHome = () => {
   selectedBank.value = ''
@@ -253,22 +250,23 @@ const goHome = () => {
   router.push('/')
 }
 
-
 onMounted(async () => {
   try {
     const res = await fetchBankList()
     bankOptions.value = res
 
-    if(route.params.bankCode && route.params.branchCode){
+    if (route.params.bankCode && route.params.branchCode) {
       const res = await fetchBranchList(route.params.bankCode)
-      if(res){
+      if (res) {
         branchOptions.value = res
         const matchBank = bankOptions.value.find((bank) => bank.includes(route.params.bankCode))
-        const matchBranch = branchOptions.value.find((branch) => branch.code == route.params.branchCode)
-        if(matchBank){
+        const matchBranch = branchOptions.value.find(
+          (branch) => branch.code == route.params.branchCode,
+        )
+        if (matchBank) {
           selectedBank.value = matchBank
         }
-        if(matchBranch){
+        if (matchBranch) {
           isValidBranch.value = true
           selectedBranch.value = matchBranch.title
         }
@@ -278,13 +276,11 @@ onMounted(async () => {
     alert('發生錯誤，請稍後再試')
   }
 })
-
-
 </script>
 <template>
   <div class="container p-3 w-full max-w-full mx-2 px-2 sm:mx-0">
     <h1 class="text-4xl sm:text-5xl font-thin mb-2">台灣銀行代碼查詢</h1>
-    <div class=" sm:flex">
+    <div class="sm:flex">
       <div class="relative sm:max-w-[245px]">
         <label class="font-medium pl-1" for="bank-name">銀行名稱</label>
         <div
@@ -317,7 +313,7 @@ onMounted(async () => {
         <p class="pl-1 mt-1 text-sm text-gray-400">可使用下拉選單或直接輸入關鍵字查詢</p>
         <div
           v-show="isBankDropdownVisible"
-          class="absolute w-full  z-[1000] max-h-[200px] py-1 top-full rounded border  overflow-y-auto scroll-auto"
+          class="absolute w-full z-[1000] max-h-[200px] py-1 top-full rounded border overflow-y-auto scroll-auto"
         >
           <div v-if="filteredbankOptions.length > 0">
             <p
@@ -380,7 +376,7 @@ onMounted(async () => {
           v-show="isBranchDropdownVisible"
           class="absolute w-full z-[1000] flex flex-col max-h-[200px] py-1 rounded border mt-1 overflow-auto"
         >
-          <div v-if="filteredbranchOptions.length > 0" >
+          <div v-if="filteredbranchOptions.length > 0">
             <p
               tabindex="-1"
               :ref="
@@ -419,7 +415,7 @@ onMounted(async () => {
               @click="copyCode(branchDetail.branchCode)"
               class="border ml-2 border-black hover:bg-green-400 bg-green-500 text-green-50 px-2 py-[2px] rounded"
               ref="copyCodeBtn"
-              >
+            >
               複製代碼
             </button>
           </div>
@@ -431,12 +427,14 @@ onMounted(async () => {
         >
       </div>
       <div class="mt-2">
-        <button @click="goHome" class="rounded border-black border py-[2px] px-[6px]">重新查詢</button>
+        <button @click="goHome" class="rounded border-black border py-[2px] px-[6px]">
+          重新查詢
+        </button>
         <button
           class="bg-blue-500 ml-1 rounded border border-black text-white py-[2px] px-[6px] hover:opacity-80"
           @click="copyLink"
           ref="copyLinkBtn"
-          >
+        >
           複製此頁面連結
         </button>
       </div>
