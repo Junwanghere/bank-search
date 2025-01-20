@@ -1,5 +1,10 @@
 <script setup>
 import { ref, onMounted, computed, watch} from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+
+const router = useRouter()
+const route = useRoute()
+
 const searchBankInput = ref(null)
 const searchBranchInput = ref(null)
 
@@ -15,6 +20,7 @@ const bankContainerRef = ref(null)
 const branchContainerRef = ref(null)
 const isBankDropdownVisible = ref(false)
 const isBranchDropdownVisible = ref(false)
+const isValidBranch = ref(false)
 
 // 以點擊div來觸發input的focus
 const handleBankContainerFocus = () => {
@@ -38,7 +44,6 @@ const handleBankInputBlur = (e) => {
 }
 
 const handleBranchInputBlur = (e) => {
-  // 檢查下一個獲得焦點的元素是否在容器內
   if (!branchContainerRef.value?.contains(e.relatedTarget)) {
     setTimeout(() => {
       isBranchDropdownVisible.value = false
@@ -46,7 +51,7 @@ const handleBranchInputBlur = (e) => {
     }, 100)
   }
 }
-// 檢查是不是有效的bank input
+
 const isValidBank = computed(() => {
   return bankOptions.value.some((bankOption) => {
     return bankOption == selectedBank.value
@@ -126,12 +131,17 @@ const handleBranchSelection = (branch) => {
   isBranchDropdownVisible.value = false
   searchBranchInput.value.blur()
   branchContainerRef.value.focus()
-  if (selectedBranch.value) {
-    isValidBranch.value = true
-  }
+  isValidBranch.value = true
+  const [bankCode, bankName] = selectedBank.value.split(' ')
+  const detailBranch = filteredbranchOptions.value[selectedBranchIndex.value]
+  const branchCode = detailBranch.code
+  const branchName = detailBranch.title
+  
+  router.push({
+    path: `/${bankCode}/${branchCode}/${bankName}-${branchName}.html`
+  })
 }
 
-const isValidBranch = ref(false)
 
 const handleBankChoose = (e) => {
   if (e.key == 'Enter' && e.isComposing) return
@@ -208,19 +218,73 @@ const branchDetail = computed(() => {
 })
 const bankRefs = ref([])
 
+const copyCodeBtn = ref(null)
+const copyCode = async (code) => {
+  try{
+    await navigator.clipboard.writeText(code)
+    copyCodeBtn.value.innerHTML = '已複製'
+    setTimeout(() => {
+      copyCodeBtn.value.innerHTML = '複製代碼'
+    },500)
+  }catch{
+    alert('複製文字失敗')
+  }
+}
+
+const copyLinkBtn = ref(null)
+const copyLink = async () => {
+  try{
+    const currentUrl = window.location.href
+    await navigator.clipboard.writeText(currentUrl)
+    copyLinkBtn.value.innerHTML = '已複製'
+    setTimeout(() => {
+      copyLinkBtn.value.innerHTML = '複製此頁面連結'
+    }, 500)
+  }catch{
+    alert('複製頁面連結失敗')
+  }
+}
+
+
+const goHome = () => {
+  selectedBank.value = ''
+  isValidBranch.value = false
+  selectedBranch.value = ''
+  router.push('/')
+}
+
+
 onMounted(async () => {
   try {
     const res = await fetchBankList()
     bankOptions.value = res
+
+    if(route.params.bankCode && route.params.branchCode){
+      const res = await fetchBranchList(route.params.bankCode)
+      if(res){
+        branchOptions.value = res
+        const matchBank = bankOptions.value.find((bank) => bank.includes(route.params.bankCode))
+        const matchBranch = branchOptions.value.find((branch) => branch.code == route.params.branchCode)
+        if(matchBank){
+          selectedBank.value = matchBank
+        }
+        if(matchBranch){
+          isValidBranch.value = true
+          selectedBranch.value = matchBranch.title
+        }
+      }
+    }
   } catch {
     alert('發生錯誤，請稍後再試')
   }
 })
+
+
 </script>
 <template>
   <div class="container p-3 w-full max-w-full mx-2 px-2 sm:mx-0">
     <h1 class="text-4xl sm:text-5xl font-thin mb-2">台灣銀行代碼查詢</h1>
-    <div class="select-container sm:flex">
+    <div class=" sm:flex">
       <div class="relative sm:max-w-[245px]">
         <label class="font-medium pl-1" for="bank-name">銀行名稱</label>
         <div
@@ -253,7 +317,7 @@ onMounted(async () => {
         <p class="pl-1 mt-1 text-sm text-gray-400">可使用下拉選單或直接輸入關鍵字查詢</p>
         <div
           v-show="isBankDropdownVisible"
-          class="absolute w-full  z-[1000] max-h-[200px] py-1 rounded border mt-1 overflow-y-auto scroll-auto"
+          class="absolute w-full  z-[1000] max-h-[200px] py-1 top-full rounded border  overflow-y-auto scroll-auto"
         >
           <div v-if="filteredbankOptions.length > 0">
             <p
@@ -301,7 +365,7 @@ onMounted(async () => {
             autocomplete="off"
             v-model="searchBranchValue"
             @blur="handleBranchInputBlur"
-            :placeholder="selectedBranch || '請輸入關鍵字或銀行代碼...'"
+            :placeholder="selectedBranch || '請選擇分行名稱'"
           />
           <div class="w-px h-5 mx-2 border-r"></div>
           <div class="w-3 h-3 cursor-pointer">
@@ -352,8 +416,10 @@ onMounted(async () => {
           <div class="flex items-center">
             <span class="text-xl my-1">分行代碼：{{ branchDetail.branchCode }}</span>
             <button
+              @click="copyCode(branchDetail.branchCode)"
               class="border ml-2 border-black hover:bg-green-400 bg-green-500 text-green-50 px-2 py-[2px] rounded"
-            >
+              ref="copyCodeBtn"
+              >
               複製代碼
             </button>
           </div>
@@ -365,10 +431,12 @@ onMounted(async () => {
         >
       </div>
       <div class="mt-2">
-        <button class="rounded border-black border py-[2px] px-[6px]">重新查詢</button>
+        <button @click="goHome" class="rounded border-black border py-[2px] px-[6px]">重新查詢</button>
         <button
           class="bg-blue-500 ml-1 rounded border border-black text-white py-[2px] px-[6px] hover:opacity-80"
-        >
+          @click="copyLink"
+          ref="copyLinkBtn"
+          >
           複製此頁面連結
         </button>
       </div>

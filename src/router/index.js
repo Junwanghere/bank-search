@@ -7,7 +7,16 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: BankSearch,
+      children: [{
+        path: ':bankCode/:branchCode/:branchName',
+        name: 'bankSearch',
+        component: BankSearch
+      }]
     },
+    {
+      path: '/:catchAll(.*)',  
+      redirect: '/'
+    }
   ],
 })
 
