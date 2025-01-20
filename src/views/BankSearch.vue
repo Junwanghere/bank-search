@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -98,6 +98,9 @@ const filteredbranchOptions = computed(() => {
 })
 
 const handleBankSelection = async (bank) => {
+  if(selectedBank.value == bank){
+    return
+  }
   selectedBank.value = bank
   searchBankValue.value = ''
   selectedBankIndex.value = bankOptions.value.indexOf(bank)
@@ -180,33 +183,25 @@ const handleBranchChoose = (e) => {
 }
 const branchRefs = ref([])
 
-watch(searchBankValue, (nv, ov) => {
-  if (ov.length == 0 && nv.length > 0) {
-    selectedBankIndex.value = 0
-  }
-})
-
-watch(searchBranchValue, (nv, ov) => {
-  if (ov.length == 0 && nv.length > 0) {
-    selectedBranchIndex.value = 0
-  }
-})
 const branchDetail = computed(() => {
   if (isValidBranch.value) {
     const branchInfo = branchOptions.value.find((branch) => {
       return branch.title == selectedBranch.value
     })
     const [code, bankName] = selectedBank.value.split(' ')
-    const branchFullName = `${bankName}(${code})${branchInfo.title}`
+    const branchFirstName = `${bankName}(${code})`
+    const branchLastName = branchInfo.title
     return {
-      branchFullName,
+      branchFirstName,
+      branchLastName,
       branchCode: branchInfo.code,
       address: branchInfo.address,
       tel: branchInfo.tel,
     }
   } else {
     return {
-      branchFullName: '',
+      branchFirstName: '',
+      branchLastName: '',
       branchCode: '',
       address: '',
       tel: '',
@@ -278,10 +273,11 @@ onMounted(async () => {
 })
 </script>
 <template>
-  <div class="container p-3 w-full max-w-full mx-2 px-2 sm:mx-0">
-    <h1 class="text-4xl sm:text-5xl font-thin mb-2">台灣銀行代碼查詢</h1>
+  <div class="container p-3 w-full  mx-auto  ">
+    <span class="text-gray-400 mx-1 text-xs">powered by <a href="https://github.com/Junwanghere">Jun</a></span>
+    <h1 class="text-4xl sm:text-5xl font-thin my-2">台灣銀行代碼查詢</h1>
     <div class="sm:flex">
-      <div class="relative sm:max-w-[245px]">
+      <div class="relative sm:max-w-[280px]">
         <label class="font-medium pl-1" for="bank-name">銀行名稱</label>
         <div
           ref="bankContainerRef"
@@ -295,7 +291,7 @@ onMounted(async () => {
             v-model="searchBankValue"
             @blur="handleBankInputBlur"
             ref="searchBankInput"
-            class="cursor-default bg-white border-0 outline-none w-[100%] sm:w-[200px]"
+            class="cursor-default bg-white border-0 outline-none w-[100%] sm:w-[200px] truncate"
             :class="{ 'placeholder:text-black': selectedBank }"
             name="bank-name"
             :placeholder="selectedBank || '請輸入關鍵字或銀行代碼...'"
@@ -303,7 +299,7 @@ onMounted(async () => {
           />
           <div class="w-px h-5 mx-2 border-r"></div>
           <div class="w-3 h-3 cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+            <svg class="fill-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
               <path
                 d="M207 381.5L12.7 187.1c-9.4-9.4-9.4-24.6 0-33.9l22.7-22.7c9.4-9.4 24.5-9.4 33.9 0L224 284.5l154.7-154c9.4-9.3 24.5-9.3 33.9 0l22.7 22.7c9.4 9.4 9.4 24.6 0 33.9L241 381.5c-9.4 9.4-24.6 9.4-33.9 0z"
               />
@@ -355,7 +351,7 @@ onMounted(async () => {
             @keydown="handleBranchChoose"
             :class="{ disableClick: !isValidBank, 'placeholder:text-black': selectedBranch }"
             ref="searchBranchInput"
-            class="cursor-default border-0 outline-none w-[100%] sm:w-[120px]"
+            class="cursor-default truncate border-0 outline-none w-[100%] sm:w-[120px]"
             name="branch-name"
             type="text"
             autocomplete="off"
@@ -365,7 +361,7 @@ onMounted(async () => {
           />
           <div class="w-px h-5 mx-2 border-r"></div>
           <div class="w-3 h-3 cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+            <svg class="fill-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
               <path
                 d="M207 381.5L12.7 187.1c-9.4-9.4-9.4-24.6 0-33.9l22.7-22.7c9.4-9.4 24.5-9.4 33.9 0L224 284.5l154.7-154c9.4-9.3 24.5-9.3 33.9 0l22.7 22.7c9.4 9.4 9.4 24.6 0 33.9L241 381.5c-9.4 9.4-24.6 9.4-33.9 0z"
               />
@@ -408,7 +404,7 @@ onMounted(async () => {
         class="w-full mt-4 flex-wrap border border-black border-dotted bg-green-50 p-2 flex flex-col rounded"
       >
         <div>
-          <h2 class="text-3xl mb-2 mt-1">{{ branchDetail.branchFullName }}</h2>
+          <h2 class="text-3xl mb-2 mt-1 flex flex-col sm:block">{{ branchDetail.branchFirstName }}<span>{{ branchDetail.branchLastName }}</span></h2>
           <div class="flex items-center">
             <span class="text-xl my-1">分行代碼：{{ branchDetail.branchCode }}</span>
             <button
@@ -422,9 +418,13 @@ onMounted(async () => {
           <p class="text-xl my-1">地址：{{ branchDetail.address }}</p>
           <p class="text-xl my-1">電話：{{ branchDetail.tel }}</p>
         </div>
-        <a class="inline-block text-green-900 sm:mt-auto sm:ml-auto text-sm" href="#"
-          >資料來源：政府資料開放平臺</a
-        >
+        <span class=" text-green-900 inline-blocksm:mt-auto sm:ml-auto text-sm">
+          資料來源：
+          <a  href="https://data.gov.tw/dataset/6041"
+            >政府資料開放平臺</a
+          >
+        </span>
+
       </div>
       <div class="mt-2">
         <button @click="goHome" class="rounded border-black border py-[2px] px-[6px]">
@@ -444,6 +444,9 @@ onMounted(async () => {
 <style scoped>
 .input-container:focus-within {
   border-color: #2563eb;
+}
+.input-container:focus-within svg {
+  fill: black
 }
 
 .selected {
