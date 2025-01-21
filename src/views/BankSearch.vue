@@ -241,24 +241,37 @@ const copyLink = async () => {
 
 const goHome = () => {
   selectedBank.value = ''
-  isValidBranch.value = false
   selectedBranch.value = ''
+  isValidBranch.value = false
+  selectedBankIndex.value = 0
+  selectedBranchIndex.value = 0
   router.push('/')
 }
 
+
+
+
+
 watch( filteredbankOptions,() => {
-  selectedBankIndex.value = 0
+  if(searchBankValue.value){
+    selectedBankIndex.value = 0
+  }
 })
 
 watch(filteredbranchOptions, () => {
-  selectedBranchIndex.value = 0
+  if(searchBranchValue.value){
+    selectedBranchIndex.value = 0
+  }
 })
 
 watch(isBankDropdownVisible, (nv) => {
   if(nv){
     setTimeout(() => {
+
       bankRefs.value[selectedBankIndex.value]?.scrollIntoView({ block: 'nearest' })
     }, 10)
+  }else{
+    selectedBankIndex.value = filteredbankOptions.value.findIndex((bank) => bank == selectedBank.value)
   }
 })
 
@@ -267,6 +280,8 @@ watch(isBranchDropdownVisible, (nv) => {
     setTimeout(() => {
       branchRefs.value[selectedBranchIndex.value]?.scrollIntoView({ block: 'nearest' })
     }, 10)
+  }else{
+    selectedBranchIndex.value = filteredbranchOptions.value.findIndex((branch) => branch.title == selectedBranch.value)
   }
 })
 
@@ -289,6 +304,8 @@ onMounted(async () => {
         if (matchBranch) {
           isValidBranch.value = true
           selectedBranch.value = matchBranch.title
+          selectedBankIndex.value = filteredbankOptions.value.findIndex((bank) => bank == selectedBank.value)
+          selectedBranchIndex.value = filteredbranchOptions.value.findIndex((branch) => branch.title == selectedBranch.value)
         }
       }
     }
