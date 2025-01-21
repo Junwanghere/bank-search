@@ -56,7 +56,6 @@ const isValidBank = computed(() => {
   })
 })
 
-// 顯示選單
 const fetchBankList = async () => {
   const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/banks')
   const { bank } = await res.json()
@@ -91,7 +90,10 @@ const filteredbranchOptions = computed(() => {
   }
 
   return branchOptions.value.filter((singleBranch) => {
-    return (singleBranch.title.includes(searchBranchValue.value) || singleBranch.code.includes(searchBranchValue.value) )
+    return (
+      singleBranch.title.includes(searchBranchValue.value) ||
+      singleBranch.code.includes(searchBranchValue.value)
+    )
   })
 })
 
@@ -110,6 +112,7 @@ const handleBankSelection = async (bank) => {
     searchBranchValue.value = ''
     selectedBranchIndex.value = 0
     isValidBranch.value = false
+    isPageLoading.value = true
     const res = await fetchBranchList(code)
     if (!res) {
       branchOptions.value = []
@@ -118,6 +121,8 @@ const handleBankSelection = async (bank) => {
     }
   } catch {
     alert('發生錯誤，請稍後再試')
+  } finally {
+    isPageLoading.value = false
   }
 }
 
@@ -298,9 +303,11 @@ watch(isBranchDropdownVisible, (nv) => {
     searchBranchInput.value.style.caretColor = 'transparent'
   }
 })
+const isPageLoading = ref(false)
 
 onMounted(async () => {
   try {
+    isPageLoading.value = true
     const res = await fetchBankList()
     bankOptions.value = res
 
@@ -327,6 +334,8 @@ onMounted(async () => {
     }
   } catch {
     alert('發生錯誤，請稍後再試')
+  } finally {
+    isPageLoading.value = false
   }
 })
 </script>
@@ -352,7 +361,7 @@ onMounted(async () => {
             v-model="searchBankValue"
             @blur="handleBankInputBlur"
             ref="searchBankInput"
-            class="cursor-default bg-white border-0 outline-none w-full truncate "
+            class="cursor-default bg-white border-0 outline-none w-full truncate"
             :class="{ 'placeholder:text-black': selectedBank }"
             name="bank-name"
             :placeholder="selectedBank || '請輸入關鍵字或銀行代碼...'"
@@ -501,6 +510,17 @@ onMounted(async () => {
         </button>
       </div>
     </div>
+  </div>
+  <div
+    v-if="isPageLoading"
+    class="pointer-events-none fixed top-0 flex items-center justify-center left-0 bg-black z-20 w-full h-full opacity-50"
+  >
+    <img
+      src="/favicon.ico"
+      style="animation-duration: 0.6s"
+      class="w-32 animate-spin"
+      alt="purplePig"
+    />
   </div>
 </template>
 <style scoped>
