@@ -354,7 +354,7 @@ onMounted(async () => {
         <p class="pl-1 mt-1 text-sm text-gray-400">可使用下拉選單或直接輸入關鍵字查詢</p>
         <div
           v-show="isBankDropdownVisible"
-          class="absolute w-full bg-white z-[1000] max-h-[200px] py-1 top-full rounded border overflow-y-auto scroll-auto"
+          class="absolute w-full bg-white z-[1000] max-h-[380px] py-1 top-full rounded border overflow-y-auto scroll-auto"
         >
           <div v-if="filteredbankOptions.length > 0">
             <p
@@ -370,7 +370,7 @@ onMounted(async () => {
                 selected: selectedBank == singleBank,
               }"
               @click="handleBankSelection(singleBank)"
-              class="p-2 cursor-default bg-white border-b-[1px] active:bg-blue-300"
+              class="px-4 py-3 cursor-default bg-white border-b-[1px] active:bg-blue-300"
               v-for="(singleBank, index) in filteredbankOptions"
               :key="singleBank"
             >
@@ -415,7 +415,7 @@ onMounted(async () => {
         </div>
         <div
           v-show="isBranchDropdownVisible"
-          class="absolute w-full bg-white z-[1000] flex flex-col max-h-[200px] py-1 rounded border mt-1 overflow-auto"
+          class="absolute w-full bg-white z-[1000] flex flex-col max-h-[380px] py-1 rounded border mt-1 overflow-auto"
         >
           <div v-if="filteredbranchOptions.length > 0">
             <p
@@ -430,7 +430,7 @@ onMounted(async () => {
                 selected: selectedBranch == branch.title,
               }"
               @mouseenter="selectedBranchIndex = +index"
-              class="p-2 cursor-default bg-white border-b-[1px] active:bg-blue-300"
+              class="px-4 py-3 cursor-default bg-white border-b-[1px] active:bg-blue-300"
               v-for="(branch, index) in filteredbranchOptions"
               :key="`${branch.code} ${branch.title}`"
               @click="handleBranchSelection(branch)"
