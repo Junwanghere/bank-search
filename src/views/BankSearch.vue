@@ -22,6 +22,7 @@ const isBankDropdownVisible = ref(false)
 const isBranchDropdownVisible = ref(false)
 const isValidBranch = ref(false)
 
+
 const handleBankContainerFocus = () => {
   searchBankInput.value.focus()
   isBankDropdownVisible.value = !isBankDropdownVisible.value
@@ -245,8 +246,16 @@ const goHome = () => {
   router.push('/')
 }
 
+watch( filteredbankOptions,() => {
+  selectedBankIndex.value = 0
+})
+
+watch(filteredbranchOptions, () => {
+  selectedBranchIndex.value = 0
+})
+
 watch(isBankDropdownVisible, (nv) => {
-  if (nv) {
+  if(nv){
     setTimeout(() => {
       bankRefs.value[selectedBankIndex.value]?.scrollIntoView({ block: 'nearest' })
     }, 10)
@@ -254,7 +263,7 @@ watch(isBankDropdownVisible, (nv) => {
 })
 
 watch(isBranchDropdownVisible, (nv) => {
-  if (nv) {
+  if(nv){
     setTimeout(() => {
       branchRefs.value[selectedBranchIndex.value]?.scrollIntoView({ block: 'nearest' })
     }, 10)
