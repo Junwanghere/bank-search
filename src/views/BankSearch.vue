@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -22,19 +22,17 @@ const isBankDropdownVisible = ref(false)
 const isBranchDropdownVisible = ref(false)
 const isValidBranch = ref(false)
 
-// 以點擊div來觸發input的focus
 const handleBankContainerFocus = () => {
   searchBankInput.value.focus()
   isBankDropdownVisible.value = !isBankDropdownVisible.value
 }
+
 const handleBranchContainerFocus = () => {
   searchBranchInput.value.focus()
   isBranchDropdownVisible.value = !isBranchDropdownVisible.value
 }
 
-// 失焦的時候
 const handleBankInputBlur = (e) => {
-  // 檢查下一個獲得焦點的元素是否在容器內
   if (!bankContainerRef.value?.contains(e.relatedTarget)) {
     setTimeout(() => {
       isBankDropdownVisible.value = false
@@ -98,15 +96,14 @@ const filteredbranchOptions = computed(() => {
 })
 
 const handleBankSelection = async (bank) => {
-  if(selectedBank.value == bank){
+  if (selectedBank.value == bank) {
     return
   }
   selectedBank.value = bank
   searchBankValue.value = ''
   selectedBankIndex.value = bankOptions.value.indexOf(bank)
-  isBankDropdownVisible.value = false
-  searchBankInput.value.blur()
   bankContainerRef.value.focus()
+
   const code = bank.split(' ')[0]
   try {
     selectedBranch.value = ''
@@ -130,8 +127,6 @@ const handleBranchSelection = (branch) => {
   selectedBranchIndex.value = filteredbranchOptions.value.findIndex((branch) =>
     branch.title.includes(selectedBranch.value),
   )
-  isBranchDropdownVisible.value = false
-  searchBranchInput.value.blur()
   branchContainerRef.value.focus()
   isValidBranch.value = true
   const [bankCode, bankName] = selectedBank.value.split(' ')
@@ -146,19 +141,21 @@ const handleBranchSelection = (branch) => {
 
 const handleBankChoose = (e) => {
   if (e.key == 'Enter' && e.isComposing) return
-
   const optionsLength = filteredbankOptions.value.length
   if (optionsLength == 0) return
-
-  if (e.key == 'ArrowDown') {
-    selectedBankIndex.value = (selectedBankIndex.value + 1) % optionsLength
-    bankRefs.value[selectedBankIndex.value]?.scrollIntoView({ block: 'nearest' })
-  } else if (e.key == 'ArrowUp') {
-    selectedBankIndex.value =
-      selectedBankIndex.value <= 0 ? optionsLength - 1 : selectedBankIndex.value - 1
-    bankRefs.value[selectedBankIndex.value]?.scrollIntoView({ block: 'nearest' })
-  } else if (e.key == 'Enter' && selectedBankIndex.value >= 0) {
-    handleBankSelection(filteredbankOptions.value[selectedBankIndex.value])
+  if (isBankDropdownVisible.value) {
+    if (e.key == 'ArrowDown') {
+      selectedBankIndex.value = (selectedBankIndex.value + 1) % optionsLength
+      bankRefs.value[selectedBankIndex.value]?.scrollIntoView({ block: 'nearest' })
+    } else if (e.key == 'ArrowUp') {
+      selectedBankIndex.value =
+        selectedBankIndex.value <= 0 ? optionsLength - 1 : selectedBankIndex.value - 1
+      bankRefs.value[selectedBankIndex.value]?.scrollIntoView({ block: 'nearest' })
+    } else if (e.key == 'Enter' && selectedBankIndex.value >= 0) {
+      handleBankSelection(filteredbankOptions.value[selectedBankIndex.value])
+    }
+  } else {
+    isBankDropdownVisible.value = true
   }
 }
 
@@ -169,16 +166,19 @@ const handleBranchChoose = (e) => {
 
   const optionsLength = filteredbranchOptions.value.length
   if (optionsLength == 0) return
-
-  if (e.key == 'ArrowDown') {
-    selectedBranchIndex.value = (selectedBranchIndex.value + 1) % optionsLength
-    branchRefs.value[selectedBranchIndex.value]?.scrollIntoView({ block: 'nearest' })
-  } else if (e.key == 'ArrowUp') {
-    selectedBranchIndex.value =
-      selectedBranchIndex.value <= 0 ? optionsLength - 1 : selectedBranchIndex.value - 1
-    branchRefs.value[selectedBranchIndex.value]?.scrollIntoView({ block: 'nearest' })
-  } else if (e.key == 'Enter' && selectedBranchIndex.value >= 0) {
-    handleBranchSelection(filteredbranchOptions.value[selectedBranchIndex.value])
+  if (isBranchDropdownVisible.value) {
+    if (e.key == 'ArrowDown') {
+      selectedBranchIndex.value = (selectedBranchIndex.value + 1) % optionsLength
+      branchRefs.value[selectedBranchIndex.value]?.scrollIntoView({ block: 'nearest' })
+    } else if (e.key == 'ArrowUp') {
+      selectedBranchIndex.value =
+        selectedBranchIndex.value <= 0 ? optionsLength - 1 : selectedBranchIndex.value - 1
+      branchRefs.value[selectedBranchIndex.value]?.scrollIntoView({ block: 'nearest' })
+    } else if (e.key == 'Enter' && selectedBranchIndex.value >= 0) {
+      handleBranchSelection(filteredbranchOptions.value[selectedBranchIndex.value])
+    }
+  } else {
+    isBranchDropdownVisible.value = true
   }
 }
 const branchRefs = ref([])
@@ -245,6 +245,22 @@ const goHome = () => {
   router.push('/')
 }
 
+watch(isBankDropdownVisible, (nv) => {
+  if (nv) {
+    setTimeout(() => {
+      bankRefs.value[selectedBankIndex.value]?.scrollIntoView({ block: 'nearest' })
+    }, 10)
+  }
+})
+
+watch(isBranchDropdownVisible, (nv) => {
+  if (nv) {
+    setTimeout(() => {
+      branchRefs.value[selectedBranchIndex.value]?.scrollIntoView({ block: 'nearest' })
+    }, 10)
+  }
+})
+
 onMounted(async () => {
   try {
     const res = await fetchBankList()
@@ -273,19 +289,22 @@ onMounted(async () => {
 })
 </script>
 <template>
-  <div class="container p-3 w-full  mx-auto  ">
-    <span class="text-gray-400 mx-1 text-xs">powered by <a href="https://github.com/Junwanghere">Jun</a></span>
+  <div class="container p-3 w-full mx-auto">
+    <span class="text-gray-400 mx-1 text-xs"
+      >powered by <a href="https://github.com/Junwanghere">Jun</a></span
+    >
     <h1 class="text-4xl sm:text-5xl font-thin my-2">台灣銀行代碼查詢</h1>
     <div class="sm:flex">
       <div class="relative sm:max-w-[280px]">
         <label class="font-medium pl-1" for="bank-name">銀行名稱</label>
         <div
           ref="bankContainerRef"
-          @click="handleBankContainerFocus"
+          @focus="handleBankContainerFocus"
           class="cursor-default p-2 input-container mt-1 flex rounded items-center border-[2px] focus:border-blue-600"
           tabindex="0"
         >
           <input
+            @click="isBankDropdownVisible = !isBankDropdownVisible"
             @keydown="handleBankChoose"
             autocomplete="off"
             v-model="searchBankValue"
@@ -309,7 +328,7 @@ onMounted(async () => {
         <p class="pl-1 mt-1 text-sm text-gray-400">可使用下拉選單或直接輸入關鍵字查詢</p>
         <div
           v-show="isBankDropdownVisible"
-          class="absolute w-full z-[1000] max-h-[200px] py-1 top-full rounded border overflow-y-auto scroll-auto"
+          class="absolute w-full bg-white z-[1000] max-h-[200px] py-1 top-full rounded border overflow-y-auto scroll-auto"
         >
           <div v-if="filteredbankOptions.length > 0">
             <p
@@ -332,7 +351,6 @@ onMounted(async () => {
               {{ singleBank }}
             </p>
           </div>
-
           <div v-else>
             <p class="text-center p-3 text-gray-400 bg-white">無相關資料</p>
           </div>
@@ -341,17 +359,18 @@ onMounted(async () => {
       <div class="relative sm:max-w-[171px] sm:ml-2 mt-2 sm:mt-0">
         <label class="font-medium pl-1" for="branch-name">分行名稱</label>
         <div
-          @click="handleBranchContainerFocus"
+          @focus="handleBranchContainerFocus"
           ref="branchContainerRef"
           :class="{ disableClick: !isValidBank }"
           class="cursor-default input-container flex rounded items-center p-2 border-[2px] focus:border-blue-600 mt-1"
           tabindex="0"
         >
           <input
+            @click="isBranchDropdownVisible = !isBranchDropdownVisible"
             @keydown="handleBranchChoose"
             :class="{ disableClick: !isValidBank, 'placeholder:text-black': selectedBranch }"
             ref="searchBranchInput"
-            class="cursor-default truncate border-0 outline-none w-[100%] sm:w-[120px]"
+            class="cursor-default truncate border-0 outline-none w-[100%] sm:w-[120px] placeholder:truncate"
             name="branch-name"
             type="text"
             autocomplete="off"
@@ -370,7 +389,7 @@ onMounted(async () => {
         </div>
         <div
           v-show="isBranchDropdownVisible"
-          class="absolute w-full z-[1000] flex flex-col max-h-[200px] py-1 rounded border mt-1 overflow-auto"
+          class="absolute w-full bg-white z-[1000] flex flex-col max-h-[200px] py-1 rounded border mt-1 overflow-auto"
         >
           <div v-if="filteredbranchOptions.length > 0">
             <p
@@ -404,7 +423,9 @@ onMounted(async () => {
         class="w-full mt-4 flex-wrap border border-black border-dotted bg-green-50 p-2 flex flex-col rounded"
       >
         <div>
-          <h2 class="text-3xl mb-2 mt-1 flex flex-col sm:block">{{ branchDetail.branchFirstName }}<span>{{ branchDetail.branchLastName }}</span></h2>
+          <h2 class="text-3xl mb-2 mt-1 flex flex-col sm:block">
+            {{ branchDetail.branchFirstName }}<span>{{ branchDetail.branchLastName }}</span>
+          </h2>
           <div class="flex items-center">
             <span class="text-xl my-1">分行代碼：{{ branchDetail.branchCode }}</span>
             <button
@@ -418,13 +439,10 @@ onMounted(async () => {
           <p class="text-xl my-1">地址：{{ branchDetail.address }}</p>
           <p class="text-xl my-1">電話：{{ branchDetail.tel }}</p>
         </div>
-        <span class=" text-green-900 inline-blocksm:mt-auto sm:ml-auto text-sm">
+        <span class="text-green-900 inline-blocksm:mt-auto sm:ml-auto text-sm">
           資料來源：
-          <a  href="https://data.gov.tw/dataset/6041"
-            >政府資料開放平臺</a
-          >
+          <a href="https://data.gov.tw/dataset/6041">政府資料開放平臺</a>
         </span>
-
       </div>
       <div class="mt-2">
         <button @click="goHome" class="rounded border-black border py-[2px] px-[6px]">
@@ -446,7 +464,7 @@ onMounted(async () => {
   border-color: #2563eb;
 }
 .input-container:focus-within svg {
-  fill: black
+  fill: black;
 }
 
 .selected {
