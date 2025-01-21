@@ -22,7 +22,6 @@ const isBankDropdownVisible = ref(false)
 const isBranchDropdownVisible = ref(false)
 const isValidBranch = ref(false)
 
-
 const handleBankContainerFocus = () => {
   searchBankInput.value.focus()
   isBankDropdownVisible.value = !isBankDropdownVisible.value
@@ -140,11 +139,17 @@ const handleBranchSelection = (branch) => {
   })
 }
 
+const isBankKeyboardNavigation = ref(false)
+
 const handleBankChoose = (e) => {
   if (e.key == 'Enter' && e.isComposing) return
   const optionsLength = filteredbankOptions.value.length
   if (optionsLength == 0) return
   if (isBankDropdownVisible.value) {
+    if (e.key == 'ArrowDown' || e.key == 'Arrowup') {
+      isBankKeyboardNavigation.value = true
+    }
+
     if (e.key == 'ArrowDown') {
       selectedBankIndex.value = (selectedBankIndex.value + 1) % optionsLength
       bankRefs.value[selectedBankIndex.value]?.scrollIntoView({ block: 'nearest' })
@@ -160,6 +165,8 @@ const handleBankChoose = (e) => {
   }
 }
 
+const isBranchKeyboardNavigation = ref(false)
+
 const handleBranchChoose = (e) => {
   if (e.key == 'Enter' && e.isComposing) {
     return
@@ -168,6 +175,10 @@ const handleBranchChoose = (e) => {
   const optionsLength = filteredbranchOptions.value.length
   if (optionsLength == 0) return
   if (isBranchDropdownVisible.value) {
+    if (e.key == 'ArrowDown' || e.key == 'Arrowup') {
+      isBranchKeyboardNavigation.value = true
+    }
+
     if (e.key == 'ArrowDown') {
       selectedBranchIndex.value = (selectedBranchIndex.value + 1) % optionsLength
       branchRefs.value[selectedBranchIndex.value]?.scrollIntoView({ block: 'nearest' })
@@ -248,40 +259,43 @@ const goHome = () => {
   router.push('/')
 }
 
-
-
-
-
-watch( filteredbankOptions,() => {
-  if(searchBankValue.value){
+watch(filteredbankOptions, () => {
+  if (searchBankValue.value) {
     selectedBankIndex.value = 0
   }
 })
 
 watch(filteredbranchOptions, () => {
-  if(searchBranchValue.value){
+  if (searchBranchValue.value) {
     selectedBranchIndex.value = 0
   }
 })
 
 watch(isBankDropdownVisible, (nv) => {
-  if(nv){
+  if (nv) {
+    searchBankInput.value.style.caretColor = 'black'
     setTimeout(() => {
-
       bankRefs.value[selectedBankIndex.value]?.scrollIntoView({ block: 'nearest' })
     }, 10)
-  }else{
-    selectedBankIndex.value = filteredbankOptions.value.findIndex((bank) => bank == selectedBank.value)
+  } else {
+    selectedBankIndex.value = filteredbankOptions.value.findIndex(
+      (bank) => bank == selectedBank.value,
+    )
+    searchBankInput.value.style.caretColor = 'transparent'
   }
 })
 
 watch(isBranchDropdownVisible, (nv) => {
-  if(nv){
+  if (nv) {
+    searchBranchInput.value.style.caretColor = 'black'
     setTimeout(() => {
       branchRefs.value[selectedBranchIndex.value]?.scrollIntoView({ block: 'nearest' })
     }, 10)
-  }else{
-    selectedBranchIndex.value = filteredbranchOptions.value.findIndex((branch) => branch.title == selectedBranch.value)
+  } else {
+    selectedBranchIndex.value = filteredbranchOptions.value.findIndex(
+      (branch) => branch.title == selectedBranch.value,
+    )
+    searchBranchInput.value.style.caretColor = 'transparent'
   }
 })
 
@@ -304,8 +318,12 @@ onMounted(async () => {
         if (matchBranch) {
           isValidBranch.value = true
           selectedBranch.value = matchBranch.title
-          selectedBankIndex.value = filteredbankOptions.value.findIndex((bank) => bank == selectedBank.value)
-          selectedBranchIndex.value = filteredbranchOptions.value.findIndex((branch) => branch.title == selectedBranch.value)
+          selectedBankIndex.value = filteredbankOptions.value.findIndex(
+            (bank) => bank == selectedBank.value,
+          )
+          selectedBranchIndex.value = filteredbranchOptions.value.findIndex(
+            (branch) => branch.title == selectedBranch.value,
+          )
         }
       }
     }
@@ -320,8 +338,8 @@ onMounted(async () => {
       >powered by <a href="https://github.com/Junwanghere">Jun</a></span
     >
     <h1 class="text-4xl sm:text-5xl font-thin my-2">台灣銀行代碼查詢</h1>
-    <div class="sm:flex">
-      <div class="relative sm:max-w-[280px]">
+    <div class="sm:flex w-full sm:max-w-full">
+      <div class="relative sm:w-[400px]">
         <label class="font-medium pl-1" for="bank-name">銀行名稱</label>
         <div
           ref="bankContainerRef"
@@ -336,7 +354,7 @@ onMounted(async () => {
             v-model="searchBankValue"
             @blur="handleBankInputBlur"
             ref="searchBankInput"
-            class="cursor-default bg-white border-0 outline-none w-[100%] sm:w-[200px] truncate"
+            class="cursor-default bg-white border-0 outline-none w-full truncate "
             :class="{ 'placeholder:text-black': selectedBank }"
             name="bank-name"
             :placeholder="selectedBank || '請輸入關鍵字或銀行代碼...'"
@@ -364,7 +382,8 @@ onMounted(async () => {
                   if (el) bankRefs[index] = el
                 }
               "
-              @mouseenter="selectedBankIndex = +index"
+              @mouseenter="!isBankKeyboardNavigation && (selectedBankIndex = +index)"
+              @mousemove="isBankKeyboardNavigation = false"
               :class="{
                 'pre-chosen': selectedBankIndex == index && selectedBank != singleBank,
                 selected: selectedBank == singleBank,
@@ -382,7 +401,7 @@ onMounted(async () => {
           </div>
         </div>
       </div>
-      <div class="relative sm:max-w-[171px] sm:ml-2 mt-2 sm:mt-0">
+      <div class="relative sm:max-w-[230px] sm:ml-2 mt-2 sm:mt-0">
         <label class="font-medium pl-1" for="branch-name">分行名稱</label>
         <div
           @focus="handleBranchContainerFocus"
@@ -396,7 +415,7 @@ onMounted(async () => {
             @keydown="handleBranchChoose"
             :class="{ disableClick: !isValidBank, 'placeholder:text-black': selectedBranch }"
             ref="searchBranchInput"
-            class="cursor-default truncate border-0 outline-none w-[100%] sm:w-[120px] placeholder:truncate"
+            class="cursor-default truncate border-0 outline-none w-full placeholder:truncate"
             name="branch-name"
             type="text"
             autocomplete="off"
@@ -429,7 +448,8 @@ onMounted(async () => {
                 'pre-chosen': selectedBranchIndex == index && selectedBranch != branch.title,
                 selected: selectedBranch == branch.title,
               }"
-              @mouseenter="selectedBranchIndex = +index"
+              @mouseenter="!isBranchKeyboardNavigation && (selectedBranchIndex = +index)"
+              @mousemove="isBranchKeyboardNavigation = false"
               class="px-4 py-3 cursor-default bg-white border-b-[1px] active:bg-blue-300"
               v-for="(branch, index) in filteredbranchOptions"
               :key="`${branch.code} ${branch.title}`"
