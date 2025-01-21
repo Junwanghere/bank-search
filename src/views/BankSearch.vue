@@ -91,7 +91,7 @@ const filteredbranchOptions = computed(() => {
   }
 
   return branchOptions.value.filter((singleBranch) => {
-    return singleBranch.title.includes(searchBranchValue.value)
+    return (singleBranch.title.includes(searchBranchValue.value) || singleBranch.code.includes(searchBranchValue.value) )
   })
 })
 
@@ -312,10 +312,8 @@ onMounted(async () => {
         const matchBranch = branchOptions.value.find(
           (branch) => branch.code == route.params.branchCode,
         )
-        if (matchBank) {
+        if (matchBank && matchBranch) {
           selectedBank.value = matchBank
-        }
-        if (matchBranch) {
           isValidBranch.value = true
           selectedBranch.value = matchBranch.title
           selectedBankIndex.value = filteredbankOptions.value.findIndex(
