@@ -347,7 +347,7 @@ onMounted(async () => {
     <h1 class="text-4xl sm:text-5xl font-thin my-2">台灣銀行代碼查詢</h1>
     <div class="sm:flex w-full sm:max-w-full">
       <div class="relative sm:w-[400px]">
-        <label class="font-medium pl-1" for="bank-name">銀行名稱</label>
+        <p class="font-medium pl-1">銀行名稱</p>
         <div
           ref="bankContainerRef"
           @focus="handleBankContainerFocus"
@@ -395,7 +395,7 @@ onMounted(async () => {
                 'pre-chosen': selectedBankIndex == index && selectedBank != singleBank,
                 selected: selectedBank == singleBank,
               }"
-              @click="handleBankSelection(singleBank)"
+              @mousedown="handleBankSelection(singleBank)"
               class="px-4 py-3 cursor-default bg-white border-b-[1px] active:bg-blue-300"
               v-for="(singleBank, index) in filteredbankOptions"
               :key="singleBank"
@@ -409,7 +409,7 @@ onMounted(async () => {
         </div>
       </div>
       <div class="relative sm:max-w-[230px] sm:ml-2 mt-2 sm:mt-0">
-        <label class="font-medium pl-1" for="branch-name">分行名稱</label>
+        <p class="font-medium pl-1">分行名稱</p>
         <div
           @focus="handleBranchContainerFocus"
           ref="branchContainerRef"
@@ -460,7 +460,7 @@ onMounted(async () => {
               class="px-4 py-3 cursor-default bg-white border-b-[1px] active:bg-blue-300"
               v-for="(branch, index) in filteredbranchOptions"
               :key="`${branch.code} ${branch.title}`"
-              @click="handleBranchSelection(branch)"
+              @mousedown="handleBranchSelection(branch)"
             >
               {{ branch.title }}
             </p>
